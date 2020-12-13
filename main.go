@@ -53,7 +53,7 @@ import (
 )
 
 var (
-	totalRecords   = flag.Int("total", 65536, "specify expected total records of table_a")
+	totalRecords   = flag.Int("total", 262144, "specify expected total records of table_a")
 	chanSize       = flag.Int("chSz", 100000, "channel size")
 	writeWorkerNum = flag.Int("writeNum", 4, "goroutine numbers to write table_b")
 	writeBatchSize = flag.Int("writeBatch", 50, "write batch size")
@@ -86,11 +86,8 @@ func main() {
 	wg.Wait()
 }
 
-// scanning `table_a` is mocked by reading some content from a web page
-func scanTableA() {
-	// avoid program quitting unexpectedly in case if writer is faster than scanner
-	wg.Add(128)
-	defer wg.Add(-128)
+var readanovel = func() []string {
+	lines := make([]string, 0)
 
 	resp, err := http.Get(`http://gutenberg.net.au/ebooks02/0200161.txt`)
 	//resp, err := http.Get(`https://archive.org/stream/davidcopperfield00766gut/766.txt`)
@@ -98,18 +95,30 @@ func scanTableA() {
 	defer resp.Body.Close()
 
 	sc := bufio.NewScanner(resp.Body)
-	i := 0
 	for sc.Scan() {
-		aDto := TableADto{Value: sc.Text()}
+		lines = append(lines, sc.Text())
+	}
+
+	return lines
+}
+
+// scanning `table_a` is mocked by reading some content from a web page
+func scanTableA() {
+	// avoid program quitting unexpectedly in case if writer is faster than scanner
+	wg.Add(128)
+	defer wg.Add(-128)
+
+	lines := readanovel()
+	n := len(lines)
+	i := 0
+	for ; i < *totalRecords;  {
+		aDto := TableADto{Value: lines[i % n]}
 		recordsCh <- &aDto
 		wg.Add(1)
-
 		i++
+
 		if i%1000 == 0 {
 			logger.Printf("mock scanning table_a: got [%d, %v) records\n", i-1000, i)
-		}
-		if i >= *totalRecords {
-			break
 		}
 	}
 
@@ -168,8 +177,9 @@ func batchInsertWithLog(goId int, bDtos []*TableBDto) {
 
 	if _, err := batchInsert(bDtos); err != nil {
 		logger.Printf("[goroutine %v] batchInsert: %v \nsql.DB Stats=%+v\n", goId, err, db.Stats())
+	} else {
+		logger.Printf("[goroutine %v] batchInsert: Success! \nsql.DB Stats=%+v\n", goId, db.Stats())
 	}
-	logger.Printf("[goroutine %v] batchInsert: Success! \nsql.DB Stats=%+v\n", goId, db.Stats())
 	wg.Add(-1 * len(bDtos))
 }
 
@@ -198,7 +208,8 @@ func Init() {
 
 	recordsCh = make(chan *TableADto, *chanSize)
 
-	db, err = sql.Open("mysql", `root:@tcp(localhost:3306)/practice?parseTime=true`)
+	db, err = sql.Open("mysql", `poi_it:QGW3RKHVGXPAJ1OI@tcp(stg-poi-it-aurora-cluster.cluster-czmsfje8s8ya.ap-southeast-1.rds.amazonaws.com:3306)/poi_it?parseTime=true`)
+	//db, err = sql.Open("mysql", `root:@tcp(localhost:3306)/practice?parseTime=true`)
 	db.SetMaxOpenConns(50)
 	db.SetMaxIdleConns(10)
 	checkErr(err, "sql.Open()")
