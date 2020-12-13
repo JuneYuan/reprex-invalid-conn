@@ -1,0 +1,19 @@
+Local console time is GMT+8, and MySQL UTC.
+
+## Local Console
+[mysql] 2020/12/13 17:00:43 packets.go:36: read tcp x.x.x.x:port->x.x.x.x:3306: read: operation timed out
+[mysql] 2020/12/13 17:02:55 packets.go:36: read tcp x.x.x.x:port->x.x.x.x:3306: read: operation timed out
+[mysql] 2020/12/13 17:04:11 packets.go:36: read tcp x.x.x.x:port->x.x.x.x:3306: read: operation timed out
+[mysql] 2020/12/13 17:07:57 packets.go:36: read tcp x.x.x.x:port->x.x.x.x:3306: read: operation timed out
+[mysql] 2020/12/13 17:08:02 packets.go:36: read tcp x.x.x.x:port->x.x.x.x:3306: read: operation timed out
+
+## MySQL
+2020-12-13T09:00:43.805629Z 403354 [Note] Aborted connection 403354 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:02:55.875997Z 403374 [Note] Aborted connection 403374 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:04:12.072269Z 403386 [Note] Aborted connection 403386 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:07:57.771643Z 403418 [Note] Aborted connection 403418 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:08:02.583749Z 403417 [Note] Aborted connection 403417 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:08:13.881630Z 403412 [Note] Aborted connection 403412 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:08:13.881644Z 403421 [Note] Aborted connection 403421 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+2020-12-13T09:08:13.881905Z 403315 [Note] Aborted connection 403315 to db: 'yyy' user: 'zzz' host: 'x.x.x.x' (Got an error reading communication packets)
+(It seems the last 3 lines of MySQL output have no matching output at my local.)
